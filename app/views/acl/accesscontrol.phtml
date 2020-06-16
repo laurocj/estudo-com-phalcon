@@ -1,0 +1,66 @@
+<?php
+/**
+ * @var \Phalcon\Mvc\View\Engine\Php $this
+ */
+use Phalcon\Tag; ?>
+
+<?php echo $this->getContent(); ?>
+<?php
+    echo $this->tag->form(
+        [
+            "/acl/saveaccesscontrol",
+            "autocomplete" => "off",
+            "class" => "form-horizontal"
+        ]
+    );
+?>
+<div class="row">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th></th>
+                <?php foreach ($roles as $role): ?>
+                    <th><?php echo $role->getRole(); ?></th>
+                <?php endforeach; ?>
+            </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($resources as $resource): ?>
+            <tr>
+                <td colspan="<?php echo count($roles) + 1 ?>"><?php echo $resource->getResource();?></td>
+            </tr>
+            <?php foreach ($resource->getActions() as $action): ?>
+                <tr>
+                    <td><?php echo $action->getAction(); ?></td>
+                    <?php foreach ($roles as $role): ?>
+                        <td>
+                            <?php
+                                $hasAccess = "";                            
+                                if($role->getAcl(
+                                        [
+                                            'action_id = :actionId: AND resource_id = :resourceId:',
+                                            'bind' => [
+                                                'actionId'   => $action->getId(),
+                                                'resourceId' => $resource->getId(),
+                                            ]
+                                        ]
+                                    )->count() > 0) {
+                                    $hasAccess = "checked";
+                                }
+                                echo "<input type='checkbox' name='acl[resource][".$resource->getId()."][action][".$action->getId()."][role][".$role->getId()."]' $hasAccess>";
+                            ?>
+                        </td>
+                    <?php endforeach; ?>
+                </tr>
+            <?php endforeach; ?>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+<div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+        <?php echo $this->tag->submitButton(["Save", "class" => "btn btn-default"]) ?>
+    </div>
+</div>
+
+<?php echo $this->tag->endForm(); ?>
